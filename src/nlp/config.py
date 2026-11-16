@@ -1,5 +1,8 @@
 """src/nlp/config.py - Module Configuration.
 
+Alias: Jugurtha
+Date: 2026 November
+
 (MODIFY YOUR VERSION OF THIS FILE)
 
 Stores configuration values for the web document EVTL pipeline.
