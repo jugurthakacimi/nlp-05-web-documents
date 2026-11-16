@@ -13,9 +13,9 @@
 
 ## Project Overview
 
-Author: Denise Case
+Author: Jugurtha Kacimi
 
-Date: 2026 October
+Date: 2026 Novembe
 
 Fifth project in the Web Mining and Applied NLP course.
 
@@ -139,7 +139,7 @@ uv run python -m pytest
 
 ## Project Documentation
 
-The [hosted documentation site](https://denisecase.github.io/nlp-05-web-documents/)
+The [hosted documentation site](https://jugurthakacimi.github.io/nlp-05-web-documents/)
 is published using Zensical and GitHub Pages.
 
 The documentation site is used to present the project report,
@@ -153,8 +153,8 @@ to check project files and publish the docs.
 
 GitHub Actions include:
 
-- [CI: Python and Documentation Checks](https://github.com/denisecase/nlp-05-web-documents/actions/workflows/ci-python-zensical.yml)
-- [CD: Documentation Deployment](https://github.com/denisecase/nlp-05-web-documents/actions/workflows/deploy-zensical.yml)
+- [CI: Python and Documentation Checks](https://github.com/jugurthakacimi/nlp-05-web-documents/actions/workflows/ci-python-zensical.yml)
+- [CD: Documentation Deployment](https://github.com/jugurthakacimi/nlp-05-web-documents/actions/workflows/deploy-zensical.yml)
 
 ## Developer Reference
 
@@ -239,7 +239,7 @@ testing, documentation, and code quality.
 
 ## Links
 
-- [Hosted Documentation](https://denisecase.github.io/nlp-05-web-documents/)
+- [Hosted Documentation](https://jugurthakacimi.github.io/nlp-05-web-documents/)
 - [Professional Python Workflow Guide](https://denisecase.github.io/pro-analytics-02/)
 - [Citation](CITATION.cff)
 - [License](LICENSE)
