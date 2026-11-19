@@ -1,5 +1,8 @@
 """src/nlp/stage02_validate.py - Validate Stage.
 
+Alias: Jugurtha
+Date: 2026 November
+
 (EDIT YOUR VERSION OF THIS FILE)
 
 Source: Raw HTML string

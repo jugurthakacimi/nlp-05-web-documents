@@ -1,5 +1,8 @@
 """src/nlp/stage03_transform.py.
 
+Alias: Jugurtha
+Date: 2026 November
+
 (EDIT YOUR VERSION OF THIS FILE)
 
 Source: validated BeautifulSoup object
