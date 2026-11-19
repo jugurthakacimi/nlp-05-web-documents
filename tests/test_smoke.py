@@ -14,11 +14,11 @@ from nlp.stage04_load import run_load
 
 HTML = """<html><head><link rel="canonical" href="https://arxiv.org/abs/1234.56789"></head>
 <body>
-<h1 class="title">Title: Example Paper</h1>
-<div class="authors"><a>Ada</a><a>Grace</a></div>
-<blockquote class="abstract">Abstract: Language models analyze text.</blockquote>
-<div class="subheader">Subjects: Computation and Language</div>
-<div class="dateline">Submitted on 1 January 2026</div>
+<h1 class="ltx_title">Title: Example Paper</h1>
+<div class="ltx_authors"><span class="ltx_personname">Ada</span><span class="ltx_personname">Grace</span></div>
+<div class="ltx_abstract">Abstract: Language models analyze text.</div>
+<span class="ltx_note">Submitted on 1 January 2026</span>
+<section class="ltx_section"><h2>Introduction</h2><p>This is the introduction.</p></section>
 </body></html>
 """
 
@@ -50,11 +50,11 @@ def test_html_stages_extract_document_metadata(monkeypatch, tmp_path):
     assert saved.loc[0, "authors"] == "Ada, Grace"
     assert saved.loc[0, "arxiv_id"] == "1234.56789"
     assert saved.loc[0, "author_count"] == 2
-    assert saved.loc[0, "abstract_word_count"] == 4
+    assert saved.loc[0, "abstract_word_count"] == 5
 
 
 def test_html_validation_requires_an_abstract():
     """Reject a page that does not contain the required abstract element."""
-    missing_abstract = HTML.replace('class="abstract"', 'class="missing"')
+    missing_abstract = HTML.replace('class="ltx_abstract"', 'class="missing"')
     with pytest.raises(ValueError, match="abstract"):
         run_validate(missing_abstract, logging.getLogger(__name__))
