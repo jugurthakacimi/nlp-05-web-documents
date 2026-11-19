@@ -15,7 +15,7 @@
 
 Author: Jugurtha Kacimi
 
-Date: 2026 Novembe
+Date: 2026 November
 
 Fifth project in the Web Mining and Applied NLP course.
 
@@ -36,8 +36,8 @@ The project is configured in
 
 ## Data
 
-The example retrieves an academic paper's abstract page
-from [arXiv](https://arxiv.org/abs/2602.20021).
+The project retrieves an academic paper's abstract page
+from [arXiv](https://arxiv.org/abs/2611.23205).
 
 The source document contains information such as:
 

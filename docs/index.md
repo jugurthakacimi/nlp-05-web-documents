@@ -59,8 +59,8 @@ The pipeline records execution details in a project log.
 
 The following artifacts are created:
 
-- `data/raw/case_raw.html` - original HTML document.
-- `data/processed/case_processed.csv` - extracted and transformed data.
+- `data/raw/jugurtha_raw.html` - original HTML document.
+- `data/processed/jugurtha_processed.csv` - extracted and transformed data.
 
 These results demonstrate that the pipeline can
 acquire, validate, extract, and persist

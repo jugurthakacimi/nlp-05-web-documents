@@ -1,2 +1,362 @@
-arxiv_id,title,authors,subjects,submitted,abstract,abstract_word_count,author_count
-2611.23205,Fine-Tuning Gemma 4 Edge Models for MATLAB Signal-Processing Code with SFT and QLoRA on a Laptop iGPU,Mehmet Altan Toksöz,Computer Science > Machine Learning,[Submitted on 17 Nov 2026],"Small language models that run on a laptop are attractive for writing signal-processing code offline, but they make systematic errors on digital signal processing (DSP) conventions. We apply supervised fine-tuning (SFT) to the Gemma 4 edge models E2B and E4B with 66 checked examples covering 11 signal-processing MATLAB subtasks, using low-rank adaptation (LoRA) and quantized LoRA (QLoRA) on the integrated GPU (iGPU) of a laptop, and deploy the 8-bit integer (int8) models with the adapters through OpenVINO. On held-out variants scored by deterministic checkers, the pass rate rises from 18/66 to 37/66 (LoRA) and 37/66 (QLoRA) for E2B and from 32/66 to 47/66 for E4B (QLoRA). Reading all 159 failing programs shows that the adapters remove most errors of convention, such as the sign of a lag, units and array shapes, but few errors in building signals and noise. Applied at run time, the adapter costs 17-19% of the generation speed.",151,1
+arxiv_id,title,authors,submitted,abstract,abstract_word_count,author_count,sections,section_word_count
+unknown,Fine-Tuning Gemma 4 Edge Models for MATLAB Signal-Processing Code with SFT and QLoRA on a Laptop iGPU,"Mehmet Altan Toksöz, PhD","November 17, 2026","Small language models that run on a laptop are attractive for writing signal-processing code
+offline, but they make systematic errors on digital signal processing (DSP) conventions.
+We apply supervised fine-tuning (SFT) to the Gemma 4 edge models E2B and E4B with 66 checked examples
+covering 11 signal-processing MATLAB subtasks, using low-rank adaptation (LoRA) and quantized LoRA
+(QLoRA) on the integrated GPU (iGPU) of a laptop, and deploy the 8-bit integer (int8) models with the
+adapters through OpenVINO.
+On held-out variants scored by deterministic checkers, the pass rate rises from
+18/66 to 37/66 (LoRA) and 37/66 (QLoRA) for E2B and from
+32/66 to 47/66 for E4B (QLoRA).
+Reading all 159 failing programs shows that the adapters remove most errors of convention,
+such as the sign of a lag, units and array shapes, but few errors in building signals and noise.
+Applied at run time, the adapter costs 17–19% of the generation speed.",151,2,"Small language models that run on a laptop are attractive for writing signal-processing code
+offline, but they make systematic errors on digital signal processing (DSP) conventions.
+We apply supervised fine-tuning (SFT) to the Gemma 4 edge models E2B and E4B with 66 checked examples
+covering 11 signal-processing MATLAB subtasks, using low-rank adaptation (LoRA) and quantized LoRA
+(QLoRA) on the integrated GPU (iGPU) of a laptop, and deploy the 8-bit integer (int8) models with the
+adapters through OpenVINO.
+On held-out variants scored by deterministic checkers, the pass rate rises from
+18/66 to 37/66 (LoRA) and 37/66 (QLoRA) for E2B and from
+32/66 to 47/66 for E4B (QLoRA).
+Reading all 159 failing programs shows that the adapters remove most errors of convention,
+such as the sign of a lag, units and array shapes, but few errors in building signals and noise.
+Applied at run time, the adapter costs 17–19% of the generation speed., Signal-processing engineers write much of their code in
+MATLAB: they synthesise pulses and chirps, correlate channels, filter, take fast Fourier transforms (FFTs) and set detection
+thresholds.
+Language models can draft such code, and small models that run on a laptop can do so without
+sending anything off the machine, which matters where the work cannot leave it.
+The Gemma 4 edge models E2B and E4BGemma Team (2026)are made for this kind of device.
+On our tasks, however, they often get the conventions of the field wrong: they read the delay with
+the wrong sign fromxcorr, forget the gainNNof an unscaled FFT, write a chirp rate in the
+wrong unit or mix row and column vectors.
+Such code runs and prints a plausible number, which makes the errors hard to notice., Low-rank adaptation (LoRA)Hu et al. (2022)and its quantized variant QLoRADettmers et al. (2023)make supervised fine-tuning (SFT) of such models possible with little memory.
+We ask how much a small set of checked examples, trained on the integrated GPU (iGPU) of the same laptop,
+improves the code these models write, and which errors it removes., Answering this needs three things.
+First, tasks whose answers can be checked automatically.
+Following the practice of judging generated code by running itChen et al. (2021), we wrote
+11 parametric subtasks from signal-processing work, run every answer in an emulator of a
+MATLAB subset, and score it with checkers that also reject values copied from the prompt or computed
+from a formula instead of measured.
+Earlier work compared commercial and open models on generating MATLAB code for automated-driving
+scenariosYang et al. (2025); here the models are small enough to run on a laptop and the domain
+is digital signal processing (DSP).
+Second, training data.
+Instead of collecting the model’s own correct answers, which were too rare, we let the small model
+write the reasoning for an expert’s solution and then the answer itself, close to the
+rationalization step of the Self-Taught Reasoner (STaR)Zelikman et al. (2022), and kept only
+answers that pass the checkers.
+Third, a way to train and deploy on a laptop: the Parameter-Efficient Fine-Tuning (PEFT) libraryMangrulkar et al. (2022)on the integrated GPU for training, and OpenVINO GenAIOpenVINO toolkit (2026)with 8-bit
+integer (int8) weights for inference., Our contributions are:, 11 parametric MATLAB signal-processing subtasks with deterministic
+checkers; the prompts of the held-out variants are listed in appendixA;, a procedure in which the small model itself writes 66 training examples from expert
+solutions, with automatic filters and a reading of every example;, LoRA and QLoRA adapters for E2B and E4B trained on a laptop GPU in under an hour each and run
+with int8 OpenVINO models;, an evaluation on held-out variants in which the adapters double the pass count of E2B and raise
+that of E4B from 32 to 47 of 66, and an analysis of all
+159 failing programs that shows which errors the adapters remove and which they do not., Section2describes the subtasks, the emulator and the checkers, section3the
+training data and section4the training and deployment.
+Section5gives the results, section6the error analysis and
+section7the limitations., The tasks come from signal processing: delay estimation between
+two receive channels, matched filtering, FFT-based detection, frequency-modulated continuous-wave (FMCW) and linear frequency-modulated
+(LFM) waveform generation, and synthetic pulse descriptor words (PDWs), which list each pulse with
+its time of arrival (TOA) and other parameters.
+In a first measurement, E2B failed every run of most of these complete tasks, so we split them
+into the steps at which the models failed.
+This gives the 11 subtasks of table1.
+Each subtask asks for a short MATLAB script that builds a signal, processes it and prints a few
+numbers., Every subtask is a parametric template.
+A variant is drawn from a random generator seeded with the subtask name and the variant index, so
+every variant is reproducible.
+The generator draws sampling rates, lengths, delays, bandwidths, amplitudes and signal-to-noise ratios (SNRs), writes the
+prompt in English and computes the expected values with NumPy and SciPy.
+A variant is drawn again when an expected value equals a number in the prompt or a frequent
+constant (2, 10, 20, 100): such a value could be copied instead of computed.
+Variants 0–5 of each subtask are used to make training data (section3); variants 6 and 7
+are held out for evaluation.
+The held-out variants come from the same distribution as the training variants, so the evaluation
+measures generalisation to new parameters of known subtasks, not to new subtasks.
+Each template also has a reference solution, which scores 100 on both held-out variants of every
+subtask.
+AppendixAlists the prompt of variant 6 of every subtask with its expected values., We run the generated code in our own MATLAB emulator, since no MATLAB installation was available.
+The emulator parses a subset of the MATLAB language into a syntax tree and evaluates it on NumPy
+arrays; it does not translate MATLAB to Python and never callsexec.
+It provides 445 built-in functions, among themxcorr,conv,fft,randn,repmat,interp1andpolyfit.
+Code cannot callsystemoreval, cannot read or write files and can create no array with
+more than 20 million elements.
+Error messages start with MATLAB’s own wording, so a model that knows MATLAB errors sees familiar
+text.
+N-dimensional arrays, struct arrays, integer types,globalandclassdefare not supported.
+The emulator can differ from MATLAB in corner cases; we return to this in section7., The code is taken from thematlabblocks of the answer and run as written: there is no
+automatic repair, and the emulator’s own hints are switched off.
+A run stops after 120 s.
+The checker parses every number of the printed output and looks for each expected value within a
+tolerance.
+Several rules make sure that a value is computed by the code rather than copied or derived from the
+prompt., Numbers written as literals in the code (comments excluded) are not accepted as results., A noise-dependent value (markedr) is accepted only if it changes when the code runs a
+second time with another seed and with its ownrngcall disabled.
+A number printed identically twice was computed from a formula, not measured., A value that must come from a peak index (the integer delay and the matched-filter peak) is
+checked by a second run in which the output ofxcorrorconvis shifted by one
+sample.
+The printed value must move with it.
+A delay printed fromtau*fsdoes not move., Some values count only if the code called the function the prompt names (xcorrorconv)., Workspace checks (markedw) inspect the arrays the code leaves behind.
+They check that channel 2 is channel 1 delayed byτ\tau, that the noise outside the pulse has the
+requested level in both channels, thatxxis the tone plus noise, that the instantaneous frequency
+of the stored chirp or FMCW vector follows the requested profile, and that the PDW matrix holds the
+right rows., The score of a run is 20 points for running without error plus 80 points shared among the checks of
+the subtask in proportion to their weights.
+All weights are 1, except the FMCW signal check (4) and the PDW matrix check (3).
+A runpasseswhen it scores 100, that is, when the code runs and every check passes., Each model answers each held-out variant once per seed, with seeds 5000–5002.
+This gives11×2×3=6611\times 2\times 3=66runs per model and adapter.
+The answer is one-shot: one system message
+(“You are an assistant that writes MATLAB code. Give the code in a```matlabblock.”),
+the English prompt, no tools and no second attempt.
+Thinking is on, as the Gemma 4 chat template allows.
+The answer may use up to 5000 tokens; the longest answer had 3063 tokens and
+no run hit the limit.
+The models run as int8 OpenVINO models on the laptop’s integrated GPU behind an OpenAI-compatible
+server (section4).
+E2B samples with temperature 0.9 and E4B with temperature 0.8, both with top-pp0.95 and top-kk50.
+The E2B setting comes from an earlier search over sampling parameters on other MATLAB tasks; the E4B
+setting is the one we used with E4B before this work., The training set has one example for each training variant: 66 examples, six per subtask.
+An example is a conversation with the system message and the prompt of section2.4,
+followed by the model’s thinking and its answer with the MATLAB code, so training and evaluation
+use the same format.
+In a first measurement on training variants, E2B passed 16 of 53 runs and none
+of the runs of 4 subtasks, so rejection sampling of its own answers would have
+left several subtasks without data and others with very few examples.
+We therefore made the examples from expert reference solutions, but had E2B write all the text
+that enters the training set: the thinking and the answer.
+No larger model writes training text; a larger model wrote only the list of facts that guided
+some answers in step 3 (see below).
+Figure1shows the three steps; 64 examples come from this
+pipeline and 2 are answers that E2B wrote on its own and that passed., E2B receives, with thinking off, the prompt of the variant, an expert’s reference solution of that
+variant and the key points of the subtask: a short paragraph that states its decisive steps,
+such as which lag ofxcorris the delay.
+The key points are written for one variant of each subtask; for 9 of the
+64 accepted thoughts they belong to the same variant, otherwise they are
+introduced as written for a similar task with other numbers.
+E2B is asked to write the thinking an assistant would go through before writing code, in its own
+style and in at most 300 words.
+The instruction forbids mentioning the solution, asks to derive every number from the task and
+never to state a noise-dependent result as a value, to state each decision exactly, and to reason
+once without correcting itself.
+For 3 subtasks (fft_bin_snr,xcorr_delay,xcorr_fine)
+the instruction also forbids arithmetic: every derived value stays a formula or a MATLAB
+expression, such astau*fsorlags(idx), for the code to compute, and every value with a
+unit is restated in seconds, hertz or Hz/s.
+In earlier attempts E2B computed bins and delays by hand and got them wrong, and those numbers then
+went into the code., A thought is rejected when it is shorter than 150 or longer than 900 words, contains a code block,
+refers to the solution or the key points, corrects itself (wait,hmm), uses vague
+phrases (depending on), or writesrandn(N), which gives anN×NN\times Nmatrix in MATLAB.
+Every number in the thought must be traceable: it must be a number of the prompt, a value of the
+reference solution that does not change with the noise seed, or one step away from these (half,
+double, inverse, square root, dB, a product or quotient of two such numbers, a unit scale).
+A number that matches only a noise-dependent value of the solution is a measurement the thought
+cannot know and is rejected.
+For the formula-only subtasks only the numbers of the prompt and simple one-step forms are allowed,
+the chirp rate must be restated in Hz/s, and the thought must say that the delay is read from thelagsoutput ofxcorr.
+For the other subtasks every integer the task asks to print (an index, length or count) must appear
+in the thought as a number., The accepted thought is inserted as E2B’s own thinking in a request that contains only the system
+message and the prompt, and E2B continues with the answer.
+The answer is scored by the checkers of section2.3, and the first answer that scores 100
+is accepted; this happened at the first attempt for 43 of the
+64 examples and never needed more than 3 attempts.
+For 17 examples this step used a longer system message with 22 numbered
+facts about sampling, FFT scaling, correlation and noise, written by Claude Opus 5.5.
+These facts served only to obtain a correct answer: the training example keeps the plain system
+message, answers that referred to the facts were rejected, and fact numbers were removed from the
+answer text., Every accepted example was read by hand, and 25 of the 66 were fixed.
+In 10 examples the fix changed what the code computes or prints.
+For example, fivefft_bin_snranswers set the peak bin to zero and still averaged over allNNbins, onexcorr_fineanswer added the same noise vector to both channels, and onexcorr_delayanswer built channel 2 by shifting channel 1 by a whole number of samples.
+The checkers accepted these answers, because they test the printed values and some arrays, not
+every step (section7).
+The other 15 fixes changed only the thought, comments, variable names or unused lines,
+for example a wrong intermediate number in a thought (0.057 MHz = 570,000 Hz) or a chirp
+rate called a carrier frequency.
+After the fixes, every example still scores 100 with the current checkers., The thoughts have 228–436 words, 310 on average.
+For two subtasks the prompt of variant 3 repeated that of variant 0, and variant 8 was used instead.
+While writing this paper we found that one held-out variant,fft_noise_powervariant 7, has the same prompt as a
+training example; section5also reports the results without it.
+The training set is not released; the prompts of the held-out variants are listed in
+appendixA., Everything runs on one laptop with an Intel Core Ultra 5 226V processor, its integrated Arc 130V
+GPU and 16 GB of memory (15.6 GB usable) shared between the CPU and the GPU.
+Training uses the GPU through PyTorch 2.9.1 with its XPU back end (PyTorch’s device type for Intel GPUs), Transformers 5.22 and PEFT 0.21;
+QLoRA adds bitsandbytes 0.50.2.
+Newer PyTorch builds gave wrong results with the installed GPU driver, so we kept 2.9.1., We train three adapters on the same 66 examples (table2):
+a LoRA adapter on the bfloat16 (bf16) weights of E2B, and QLoRA adapters on E2B and E4B, whose base
+layers are quantized to the 4-bit NormalFloat (NF4) type with double quantization and computed in bf16.
+E4B has only a QLoRA adapter, because its bf16 weights do not leave enough GPU memory for training.
+The adapters have rank 16 andα=16\alpha=16, no dropout, and sit on the query, key,
+value and output projections and the three multilayer perceptron (MLP) projections of every language-model layer.
+The loss is computed only on the tokens of the thought and the answer, with the prompt formatted by
+the same chat template as at inference.
+Training uses AdamW with learning rate10−410^{-4}and no weight decay, one example per step,
+gradient clipping at 1, gradient checkpointing and 3 epochs with the examples shuffled in
+every epoch.
+There was one training run per adapter; we did not tune these settings., For inference we use the official int8 OpenVINO exports of the two models and OpenVINO GenAI on the
+GPU, behind a small OpenAI-compatible server.
+The adapter is loaded as saved by PEFT and applied at run time without merging it into the
+weights, so the adapter trained on bf16 or NF4 weights runs on int8 weights.
+The adapter evaluations used OpenVINO 2026.4.1.
+The E4B base model failed on its first requests with an out-of-resources error of the GPU runtime in
+that version, so the E4B base evaluation and the E2B base runs with seeds 5001–5002 on four subtasks used a
+2026.5 nightly build; section5discusses this difference., Applying the adapter at run time costs speed.
+On the E4B server, with the same three general prompts, greedy decoding and 1024 generated
+tokens each, generation
+ran at 15.9 tokens/s without the adapter and 13.0 tokens/s with it, a
+19% drop.
+The same measurement on E2B gave 30.7 tokens/s without and 25.4 tokens/s with
+the LoRA adapter, a 17% drop.
+For E4B with the adapter, the nightly build and 2026.4.1 gave the same speed
+(12.9 and 13.2 tokens/s).
+Merging the adapter into the int8 weights would remove this cost; the run-time merge mode of
+OpenVINO GenAI accepts only floating-point weights.
+In the evaluations the adapters also shortened the answers, from 1713 to
+1283 tokens on average for E4B, so a run took 106 s with the adapter
+and 121 s without (42 s and 50 s for E2B with
+and without LoRA).
+These run times come from evaluations with different OpenVINO versions and are only indicative., Table3gives the results of the five evaluated models on the 66 held-out runs.
+Both adapters double the pass count of E2B, from 18 to 37 with LoRA and
+37 with QLoRA, and the E4B adapter raises it from 32 to 47.
+The mean score rises with the pass count, from 46.5 to 71.3 and
+69.9 for E2B and from 68.7 to 84.7 for E4B.
+The adapted models also write shorter answers: E4B with the adapter uses 1283 tokens per
+answer instead of 1713, E2B with LoRA 1286 instead of 1769.
+Without the held-out variant whose prompt is also a training prompt (section3), the
+counts change by at most two and the order of the models stays the same (columnof
+63in table3)., Two models answered the same 66 prompts with the same seeds, so we compare them run by run and count
+the runs that only one of them passes.
+The seed pairs the runs only loosely, since the sampled answer also depends on the adapter and on
+small numerical differences, so the pairing mainly matches prompts.
+We use the exact two-sided sign test (McNemar’s test) on the discordant pairs.
+For E2B, 22 runs pass only with LoRA and 3 only without it
+(p=0.00016p=0.00016); with QLoRA the counts are 25 and
+6 (p=0.00088p=0.00088).
+For E4B, 21 runs pass only with the adapter and 6
+only without it (p=0.0059p=0.0059).
+LoRA and QLoRA on E2B are indistinguishable: 11 runs pass only with one of them
+and 11 only with the other.
+The adapted E2B passes more runs than the unadapted E4B (37 and 37 against
+32), but the difference is not significant (13 against
+8 runs,p=0.38p=0.38, for LoRA).
+With 66 runs per model, only large differences reach significance., Figure2breaks the passes down by subtask.
+The largest gains are on subtasks where the base models broke conventions of MATLAB and DSP, such
+as the sign and offset of a lag (section6classifies the errors).
+The integer delay fromxcorrgoes from 0 to 2
+(LoRA) and 5 (QLoRA) passes for E2B and from 0 to
+4 for E4B, and the delay from the matched-filter peak from
+0 to 3 and 2 for E2B and from
+1 to 4 for E4B.
+The fractional delay in noise remains the hardest subtask: one run passes, with the E4B adapter.
+For E2B, the FMCW frequency profile (1, 1 and
+1 passes) and the single chirp (3, 3 and
+2) do not improve; for E4B the chirp goes from 3 to
+6.
+On the theoretical FFT noise power E4B gets slightly worse with the adapter
+(4 to 3 passes), while E2B improves
+(1 to 4 and 5)., The E4B base model was evaluated with the 2026.5 nightly build and its adapter with 2026.4.1
+(section4), so the E4B comparison mixes two versions.
+We did not repeat the 66 adapter runs on the nightly build, for three reasons.
+Both versions run the same int8 weights with the same template and sampling, and fixed seeds do not
+reproduce an answer exactly even within one version, so a version change acts like a change of
+seed.
+With the adapter, both versions generate at the same speed (section4).
+And the one adapter run we repeated on the nightly build,xcorr_delayvariant 6, seed 5000, scored 100 as it
+did on 2026.4.1.
+For E2B base, 1 of the 16 nightly runs on four subtasks passed,
+and 0 of the 8 runs of the same subtasks on 2026.4.1.
+A version effect of the size of the differences in table3would be needed to change the
+conclusions; we have no sign of one, but we cannot exclude a smaller one., The checkers tell which value is wrong, not why.
+To see what the adapters change, every failing code of the five models, 159 in all, was
+read together with its output and given one or more of 12 error classes.
+The reading and labelling were done with Claude Opus 5.5.
+A run can contain several errors; we count, for each model, the runs out of 66 whose code contains
+a class (figure3).
+AppendixBdefines the classes and gives the counts as a table.
+Two limits apply.
+Only failing runs were read, so an error that does not change a printed value is not counted, and
+when a code stops with an error the later lines may hide further errors., The classes that shrink most are conventions that a reference solution states once and the model
+can copy.
+Lag and index conventions fall from 17 runs to 6 (LoRA)
+and 5 (QLoRA) for E2B and from 18 to
+2 for E4B.
+Without an adapter both models often callxcorr(s1, s2), whose peak lies at the negative
+lag, and print the delay with the wrong sign; they read theconvpeak index as the delay; and
+they add one to the 1-based index returned bymax.
+Unit errors fall from 15 to 9 and 7 for E2B and
+from 4 to 0 for E4B, row–column errors from
+9 to 1 and 3 for E2B, and the matched filter
+without time reversal from 4 to 0 and 1.
+E2B still makes unit errors in 9 (LoRA) and 7 (QLoRA) runs, mostly
+by writing the chirp rate of the delay subtasks with the wrong power of ten (for examplek = 1.808e6for 1.808 MHz/µs, which is1.808×10121.808\times 10^{12}Hz/s), although every
+training example of these subtasks converts it., Errors in how a signal is built change much less.
+For E2B, waveform errors fall only from 13 to 8 and
+10, and 22 of the 25 failures of the chirp and
+FMCW subtasks in the three E2B models build the chirp phase or the frequency profile wrong:
+the phase written as2​π​f​(t)​t2\pi f(t)\,tinstead of the integral off⁡(t)f(t), the slope divided twice by
+the ramp duration, one ramp instead of four.
+Building the delayed channel ass⁡(t−τ)s(t-\tau)also stays hard for E2B (6,
+6 and 4 runs): the models shift the window tot≥τt\geq\taubut evaluate the phase att−τt-\tau, or shift by a whole number of samples.
+The noise model is wrong in 11, 7 and 7 E2B runs
+and in 7 and 6 E4B runs.
+For the E4B adapter it is the main remaining error: in 3 of its
+5 failures on the fractional delay the printed delay is right and only the noise
+level is wrong, because the pulse power is averaged over the whole vector, zeros included.
+No training example does this; all of them pass the noise-level check., The theoretical value of an unscaled FFT needs the factorNN: the mean of|X|2|X|^{2}isN​σ2N\sigma^{2}and the SNR gain is10​log10​N10\log_{10}N.
+Without an adapter both models leave it out in most failing runs of these subtasks.
+For E2B the adapters reduce this error from 11 to 3 and
+4 runs; for E4B it stays at 5 and 5.
+Six training examples per subtask were not enough to change this answer of E4B., The following lines are taken from failing answers, shortened and with variable names abbreviated;
+the comments are ours., All code runs in our own emulator of a MATLAB subset (section2.2), not in MATLAB.
+A difference between the two can fail a correct answer or pass a wrong one.
+We know of one probable case: an E4B adapter answer onxcorr_delayassigns into a scalar with
+a logical mask longer than the scalar.
+MATLAB grows the array in this case, as far as we know, while the emulator stops with an error.
+We could not check this in MATLAB, and the answer would not necessarily have passed there., The checkers test the printed values and some arrays of the workspace, not every line of the code.
+Reading the training examples showed that they had accepted wrong code (section3).
+The noise-level check ofxcorr_finewas added before the final scoring, after a passing
+evaluation answer turned out to set the noise from the power of the whole vector; all evaluations
+were scored again with the final checkers.
+Other errors that do not change a checked value can remain in passing runs; for example, no check
+tests whether the two channels ofxcorr_fineget independent noise., Each model was evaluated on 66 runs, six per subtask, and each adapter comes from one training run
+with settings we did not tune.
+Differences of a few passes between two models, or of one or two passes within a subtask, are
+within the noise.
+The seeds pair two models’ runs only loosely, so the paired tests mainly match prompts., The 66 examples were made with expert reference solutions, filters, repeated sampling and
+hand fixes.
+25 examples were fixed by hand, 10 of them in what the code computes, and
+17 answers were obtained with a system message whose facts were written by a larger
+model (section3).
+The models therefore learn from text that E2B wrote under guidance, not from E2B’s unaided output.
+The training data are not released., The held-out variants come from the same templates as the training variants, and one of them,fft_noise_powervariant 7, even has the same prompt as a training example (results without it are in
+table3).
+The evaluation thus measures new parameters of known subtasks.
+We did not test new subtasks, longer programs or whether the adapters harm the models on other
+tasks., Two OpenVINO versions were used (section5), the adapters were trained on bf16 or NF4
+weights and run on int8 weights, and all measurements come from one laptop.
+Speeds and run times depend on the software version and on system settings and may differ on other
+machines., The error classes of section6were assigned by reading the failing codes with Claude
+Opus 5.5, and only failing runs were read.
+Another reader could draw some class boundaries differently, for example between a unit error and a
+waveform error caused by it., Sixty-six checked examples, one per training variant, were enough to change how two small models
+write MATLAB signal-processing code.
+With a LoRA or QLoRA adapter trained in under an hour on the laptop’s integrated GPU, E2B passed
+37 and 37 of 66 held-out runs instead of 18, and E4B
+47 instead of 32; QLoRA was as good as LoRA on E2B.
+The error analysis shows what such a small set teaches: conventions that a solution states once,
+such as the sign of a lag, the unit of a chirp rate or the shape of an array, largely disappear.
+Errors in building a signal, such as the phase of a chirp, a delayed channel or the level of the
+noise, and the FFT gain for E4B, change little.
+These need more than six examples per subtask, or more examples aimed at the signal model., The adapter costs 17–19% of the generation speed when it is applied at run
+time; merging it into the int8 weights would remove this cost.
+Further work should test the adapters on new subtasks and on tasks outside signal processing, and
+check the emulator against MATLAB., AcknowledgementsThe numbered facts of the generation-time system message (section3) were written by
+Claude Opus 5.5.
+Assistance on many details was provided by Claude Opus 5.5., This appendix gives the prompt of held-out variant 6 of every subtask, as the models received it,
+and the values the checker expects for that variant.
+Each prompt was sent after the system message of section2.4.
+The prompts, the expected values and the reference solutions are generated by the task templates;
+the training data are not released.
+In the prompt ofpdw_single, RF is the carrier frequency, PW the pulse width, PA the pulse
+amplitude and DOA the direction of arrival., Two channels are sampled at fs = 20 MHz, 1024 samples each (t = (0:N-1)/fs). Channel 1 contains a complex LFM pulse s(t) = exp(1j*pi*k*(t - tc).^2) for t0 <= t < t0 + Tp and zero elsewhere, with t0 = 12750 ns, Tp = 2200 ns, k = 3.17 MHz/us and tc = t0 + Tp/2. Channel 2 contains s(t - tau) with tau = 1545 ns. There is no noise. Estimate the delay of channel 2 relative to channel 1 in whole samples from the peak of the cross-correlation computed with xcorr and print it., Expected values: integer delay (fromxcorr)3131., Two channels are sampled at fs = 20 MHz, 256 samples each (t = (0:N-1)/fs). Channel 1 contains a complex LFM pulse s(t) = exp(1j*pi*k*(t - tc).^2) for t0 <= t < t0 + Tp and zero elsewhere, with t0 = 2250 ns, Tp = 3500 ns, k = 1.808 MHz/us and tc = t0 + Tp/2. Channel 2 contains s(t - tau) with tau = 465.5 ns. Add independent complex white Gaussian noise to each channel with an SNR of 30 dB relative to the pulse power. Estimate the delay of channel 2 relative to channel 1 in samples: find the peak of the cross-correlation magnitude computed with xcorr, then refine it with parabolic interpolation through the peak and its two neighbours. Print the refined delay in samples with 4 decimals., Expected values: refined delay9.31±0.29.31\pm 0.2., Generate 16384 samples of a complex tone 2*exp(1j*2*pi*f0*t) with f0 = 0.74 MHz and fs = 10 MHz, and add complex white Gaussian noise so that the SNR (tone power to noise power) is 15 dB; call the noisy signal x. From the noise you generated, print the measured noise power (mean of |noise|^2) and the measured variance of its real part, and print the measured power of x (mean of |x|^2)., Expected values: noise power0.12649±0.0130.12649\pm 0.013; variance of the real part0.063246±0.00630.063246\pm 0.0063; power ofxx4.1265±0.044.1265\pm 0.04., Generate a complex baseband LFM pulse with amplitude 3, bandwidth 2 MHz and duration 10 us, sampled at 5 MHz (N = T*fs samples, t = (0:N-1)/fs - T/2, s = A*exp(1j*pi*(B/T)*t.^2)). Apply its matched filter to the pulse with conv and print the length of the filter output, the 1-based index of its peak magnitude and the peak magnitude., Expected values: length9999; peak index5050; peak magnitude450±0.45450\pm 0.45., Generate a complex baseband LFM pulse with amplitude 0.8, bandwidth 2 MHz and duration 40 us, sampled at 10 MHz (N = T*fs samples, t = (0:N-1)/fs - T/2, s = A*exp(1j*pi*(B/T)*t.^2)). A receiver records 504 samples with no noise: zeros except this pulse, which starts 4.6 us after the first sample. Apply the matched filter with conv(rx, h), where h is the matched filter of the pulse, and print the 1-based index of the output peak and the delay of the pulse in samples obtained from that index., Expected values: peak index446446; delay from the peak index4646., Generate 1024 samples of complex white Gaussian noise with variance 4 (total power of each complex sample) and compute X = fft(x) without any scaling. Print the measured mean of |X|.^2 over all bins and its theoretical value., Expected values: measured mean4096±4104096\pm 410; theoretical mean4096±4.14096\pm 4.1., In an FFT of pure complex white Gaussian noise, |X(k)|^2 in each bin is exponentially distributed with mean 8192. Compute the threshold T on |X(k)|^2 for which the probability of exceeding it is 0.01, and print T and the corresponding threshold on |X(k)|., Expected values: threshold on|X|2|X|^{2}37726±7537726\pm 75; threshold on|X||X|194.23±0.39194.23\pm 0.39., A complex tone 0.5*exp(1j*2*pi*f0*t) with f0 = 70373.5 Hz is in complex white Gaussian noise with an SNR of -10 dB per sample; fs = 1 MHz and 16384 samples, t = (0:N-1)/fs. Compute X = fft(x) and print the 1-based index of the largest |X|, the measured SNR at the FFT output in dB (|X|^2 at that bin divided by the mean |X|^2 of all other bins) and the theoretical SNR at the FFT output in dB., Expected values: peak bin (1-based)11541154; measured SNR32.144±1.532.144\pm 1.5; theoretical SNR32.144±0.0232.144\pm 0.02., An FMCW signal uses sawtooth down-chirp modulation sweeping from +B/2 down to -B/2 with B = 50 MHz, ramp duration 40 us, sampled at 75 MHz, with 4 ramps. Build the vector of its instantaneous frequency in MHz at every sample (sample n at time (n-1)/fs) and print its length, its minimum, its maximum and its value at t = 39.8267 us., Expected values: length1200012000; minimum−25±0.025-25\pm 0.025; maximum25±0.02525\pm 0.025; value at a given time−24.783±0.0083-24.783\pm 0.0083., Write MATLAB code that generates a single complex baseband linear chirp sweeping from +B/2 to -B/2 with B = 10 MHz over 40 us, sampled at 20 MHz. Store it in a single vector and print its length., No printed value is checked; the stored vector is checked in the workspace., Write a PDW generator for one emitter. A PDW list is an N x 5 matrix with columns [TOA(us) RF(MHz) PW(us) PA(dBm) DOA(deg)], one row per pulse. The emitter has PRI 80 us, RF 9364 MHz, PW 1 us, PA -31 dBm, DOA 292 deg and its first pulse at TOA 63.5 us; constant PRI, no jitter. Build the PDW matrix of every pulse with TOA < 2000 us and print the number of PDWs and the TOA of the last one., Expected values: number of PDWs2525; last TOA1983.5±0.0011983.5\pm 0.001., Table4defines the error classes of section6and gives, for each model, the
+number of runs (of 66) whose code contains the class.
+A run can contain several classes, so a column does not sum to the number of failing runs.",5658

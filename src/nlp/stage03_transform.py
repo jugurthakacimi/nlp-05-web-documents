@@ -128,13 +128,16 @@ def run_transform(
     LOG.info("========================")
 
     # By reading the web page source, we see title tag is located in <h1>
-    title_tag: Tag | None = soup.find("h1", class_="title")
+    title_tag: Tag | None = soup.find("h1", class_="ltx_title")
 
     # Authors tag from <div class="authors">
-    authors_tag: Tag | None = soup.find("div", class_="authors")
+    authors_tag: Tag | None = soup.find("div", class_="ltx_authors")
 
     # Abstract tag from <blockquote class="abstract">
-    abstract_tag: Tag | None = soup.find("blockquote", class_="abstract")
+    abstract_tag: Tag | None = soup.find("div", class_="ltx_abstract")
+
+    # Section tag from <section class="ltx_section">
+    sections_tag: Tag | None = soup.find("section", class_="ltx_section")
 
     # Extract title text from the tag, or use "unknown" if tag not found.
     # The arXiv page includes "Title:" as a descriptor inside the tag: strip it.
@@ -160,7 +163,9 @@ def run_transform(
     # Instead, we find all <a> tags inside the authors <div>.
     # .find_all("a") returns a list of Tag objects, one per author.
     # If the authors_tag is None (not found), we use an empty list.
-    author_tags_list: list[Tag] = authors_tag.find_all("a") if authors_tag else []
+    author_tags_list: list[Tag] = (
+        authors_tag.find_all("span", class_="ltx_personname") if authors_tag else []
+    )
 
     # Now we extract the text from each author Tag in the list.
     # We use a list comprehension as a concise way to transform one list into another.
@@ -183,8 +188,19 @@ def run_transform(
     # Extract abstract text, or "unknown" if tag not found.
     # .replace("Abstract:", "") removes the descriptor prefix.
     abstract: str = (
-        abstract_tag.get_text(strip=True).replace("Abstract:", "").strip()
+        abstract_tag.get_text(strip=True).replace("Abstract", "").strip()
         if abstract_tag
+        else "unknown"
+    )
+
+    # Section text, or "unknown" if tag not found.
+    sections_tags_list: list[Tag] = (
+        soup.find_all("p", class_="ltx_p") if sections_tag else []
+    )
+
+    sections: str = (
+        ", ".join([tag.get_text(strip=True) for tag in sections_tags_list]).strip()
+        if sections_tag
         else "unknown"
     )
 
@@ -193,26 +209,19 @@ def run_transform(
     LOG.info(f"Extracted title: {title}")
     LOG.info(f"Extracted authors: {authors}")
     LOG.info(f"Extracted abstract: {abstract[:100]}...")
+    LOG.info(f"Extracted sections: {sections[:100]}...")
 
     LOG.info("========================")
-    LOG.info("STAGE 03b: Extract metadata field subjects from subheader")
-    LOG.info("========================")
-
-    # Primary subject from <div class="subheader">
-    subheader: Tag | None = soup.find("div", class_="subheader")
-
-    # Subjects may be in the format "Subjects: cs.AI (primary); cs.LG; stat.ML"
-    # We can extract the primary subject and also keep the full list if needed.
-    subjects: str = subheader.get_text(strip=True) if subheader else "unknown"
-    LOG.info(f"Extracted subjects: {subjects}")
-
-    LOG.info("========================")
-    LOG.info("STAGE 03c: Extract metadata field date from dateline")
+    LOG.info("STAGE 03b: Extract metadata field date from dateline")
     LOG.info("========================")
 
     # Submission date from <div class="dateline">
-    dateline: Tag | None = soup.find("div", class_="dateline")
-    date_submitted_str: str = dateline.get_text(strip=True) if dateline else "unknown"
+    dateline: Tag | None = soup.find("span", class_="ltx_note")
+    date_submitted_str: str = (
+        dateline.get_text(strip=True).replace("subheader:", "").strip()[2:]
+        if dateline
+        else "unknown"
+    )
     LOG.info(f"Extracted submitted: {date_submitted_str}")
 
     LOG.info("========================")
@@ -266,6 +275,10 @@ def run_transform(
     )
     LOG.info(f"Calculated author count: {author_count}")
 
+    # Calculate derived field: section word count
+    section_word_count: int = len(sections.split()) if sections != "unknown" else 0
+    LOG.info(f"Calculated section word count: {section_word_count}")
+
     LOG.info("========================")
     LOG.info("STAGE 03f: Build record and create DataFrame")
     LOG.info("========================")
@@ -274,11 +287,12 @@ def run_transform(
         "arxiv_id": arxiv_id,
         "title": title,
         "authors": authors,
-        "subjects": subjects,
         "submitted": date_submitted_str,
         "abstract": abstract,
         "abstract_word_count": abstract_word_count,
         "author_count": author_count,
+        "sections": sections,
+        "section_word_count": section_word_count,
     }
 
     df = pd.DataFrame([record])
