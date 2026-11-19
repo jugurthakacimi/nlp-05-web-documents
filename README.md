@@ -37,14 +37,14 @@ The project is configured in
 ## Data
 
 The project retrieves an academic paper's abstract page
-from [arXiv](https://arxiv.org/abs/2611.23205).
+from [arXiv](https://arxiv.org/html/2611.23205v1).
 
 The source document contains information such as:
 
 - Paper title.
 - Authors.
 - Abstract.
-- Subject categories.
+- Sections
 - Submission information.
 - arXiv identifier.
 

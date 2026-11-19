@@ -1,6 +1,6 @@
 # Web Mining and Applied NLP Project Report
 
-Web Mining and Applied NLP | Project 05 | Example Report
+Web Mining and Applied NLP | Project 05
 
 ## Overview
 
@@ -31,6 +31,7 @@ The project uses:
 - Logging for execution records.
 - Ruff, ty, and pytest for code verification.
 - Zensical and GitHub Pages for published documentation.
+- Matplotlib for visualizing results.
 
 The example retrieves an academic paper's
 abstract page from arXiv.
@@ -87,6 +88,13 @@ and make web mining workflows more reproducible.
 
 The resulting structured text and metadata
 provide inputs for subsequent NLP analysis.
+
+## Results
+
+A total number of 5,658 words have been found in the extracted research paper sections. Word frequency analysis was done in order to find out the top fifteen words that have occurred in the text. However, for this purpose, the common English stopwords were excluded from the analysis. According to the results, "code" was the highest occurring word which occurred 34 times whereas "noise" has been used 32 times. The words "models," "adapter," and "training" have been used 31 times each showing the prominence of computer science and modeling in the paper. Some other frequently occurring words include "matlab" (26 times), "subtasks" (24 times), "answer" (22 times), and "prompt" (21 times).
+
+# Visualization
+![alt text](word_count_chart.png)
 
 ## Documentation Index
 
