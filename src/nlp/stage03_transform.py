@@ -81,9 +81,12 @@ Edit your Python file to change:
 # Section 1. Setup and Imports
 # ============================================================
 
+from collections import Counter
 import logging
+import re
 
 from bs4 import BeautifulSoup, Tag
+import matplotlib.pyplot as plt
 import pandas as pd
 
 # ============================================================
@@ -225,7 +228,7 @@ def run_transform(
     LOG.info(f"Extracted submitted: {date_submitted_str}")
 
     LOG.info("========================")
-    LOG.info("STAGE 03d: Extract metadata field arxiv_id from canonical link")
+    LOG.info("STAGE 03c: Extract metadata field arxiv_id from canonical link")
     LOG.info("========================")
 
     # The canonical link looks like this in the HTML <head>:
@@ -280,7 +283,7 @@ def run_transform(
     LOG.info(f"Calculated section word count: {section_word_count}")
 
     LOG.info("========================")
-    LOG.info("STAGE 03f: Build record and create DataFrame")
+    LOG.info("STAGE 03d: Build record and create DataFrame")
     LOG.info("========================")
 
     record = {
@@ -309,4 +312,107 @@ def run_transform(
     LOG.info("Transformation complete.")
 
     # Return the transformed DataFrame for use in the Load stage.
+
+    LOG.info("========================")
+    LOG.info("STAGE 03f: Analyze section word frequency")
+    LOG.info("========================")
+
+    # Common English words to exclude from the analysis.
+    stop_words = {
+        "the",
+        "and",
+        "for",
+        "are",
+        "with",
+        "this",
+        "that",
+        "from",
+        "was",
+        "were",
+        "has",
+        "have",
+        "had",
+        "not",
+        "but",
+        "you",
+        "your",
+        "their",
+        "they",
+        "its",
+        "our",
+        "can",
+        "will",
+        "into",
+        "than",
+        "then",
+        "also",
+        "such",
+        "these",
+        "those",
+        "using",
+        "use",
+        "based",
+        "which",
+        "been",
+        "being",
+        "when",
+        "where",
+        "how",
+        "what",
+        "all",
+        "one",
+        "two",
+        "each",
+        "more",
+        "most",
+        "some",
+        "other",
+        "new",
+        "paper",
+        "study",
+        "results",
+        "run",
+        "runs",
+        "only",
+        "every",
+        "same",
+    }
+
+    # Extract individual words, convert to lowercase,
+    # and remove punctuation and numbers.
+    words = re.findall(r"\b[a-zA-Z]{3,}\b", sections.lower())
+
+    # Remove common words that do not provide analytical value.
+    filtered_words = [word for word in words if word not in stop_words]
+
+    # Count how many times each word appears.
+    word_counts = Counter(filtered_words)
+
+    # Get the 15 most frequently repeated words.
+    top_words = word_counts.most_common(15)
+
+    LOG.info(f"Analyzed {len(filtered_words)} words")
+    LOG.info(f"Most frequent words: {top_words}")
+
+    # Create a DataFrame for visualization.
+    word_frequency_df = pd.DataFrame(top_words, columns=["word", "frequency"])
+
+    # Display horizontal bar chart.
+    if not word_frequency_df.empty:
+        plt.figure(figsize=(10, 6))
+
+        plt.barh(word_frequency_df["word"], word_frequency_df["frequency"])
+
+        plt.title("Top 15 Most Frequent Words in Research Sections")
+        plt.xlabel("Frequency")
+        plt.ylabel("Words")
+
+        # Display the most frequent word at the top.
+        plt.gca().invert_yaxis()
+
+        plt.tight_layout()
+        plt.show()
+
+    else:
+        LOG.warning("No words available for frequency analysis.")
     return df
